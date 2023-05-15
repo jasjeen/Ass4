@@ -21,34 +21,35 @@ SkipList::SkipList(int levels, int probability)
   head->next.resize(levels, nullptr);
 }
 
+
 // SkipList copy constructor
-SkipList::SkipList(const SkipList &other)
-    : levels(other.levels), probability(other.probability) {
+//SkipList::SkipList(const SkipList &other) {
+  
+//}
+SkipList::SkipList(const SkipList &other) : levels(other.levels), probability(other.probability) {
   head = new SNode(INT_MIN);
   head->next.resize(levels, nullptr);
 
-  unordered_map<SNode *, SNode *> nodeMap; // Map of original nodes to copied nodes
-
-  // Copy the nodes at each level
+  // Find the maximum level of the nodes in the original SkipList
+  int maxLevel = 0;
   SNode *curr = other.head;
   while (curr) {
-    SNode *newNode = new SNode(*curr);
-    nodeMap[curr] = newNode;
+    maxLevel = max(maxLevel, (int)curr->next.size());
     curr = curr->next[0];
   }
 
-  // Connect the copied nodes at each level
-  curr = other.head;
+  // Calculate the number of levels needed for the copied SkipList
+  levels = min(maxLevel, levels);
+  head->next.resize(levels, nullptr);
+
+  // Add the nodes from the original SkipList to the copied SkipList
+  curr = other.head->next[0];
   while (curr) {
-    SNode *newNode = nodeMap[curr];
-    for (int i = 0; i < levels; i++) {
-      if (curr->next[i]) {
-        newNode->next[i] = nodeMap[curr->next[i]];
-      }
-    }
+    add(curr->val);
     curr = curr->next[0];
   }
 }
+
 
 // SkipList destructor
 SkipList::~SkipList() {
@@ -63,7 +64,6 @@ SkipList::~SkipList() {
 // Add a single value to the SkipList
 void SkipList::add(int val) {
   vector<SNode *> beforeNodes = getBeforeNodes(val);
-
   SNode *newNode = new SNode(val);
   newNode->next.resize(levels, nullptr);
 
@@ -75,7 +75,8 @@ void SkipList::add(int val) {
       break;
     }
   }
-}
+} 
+
 
 // Add multiple values to the SkipList
 void SkipList::add(const vector<int> &values) {
@@ -148,3 +149,30 @@ void SkipList::print() const {
     cout << endl;
   }
 } */
+
+/**
+ * "[level: 3] 7-->nullptr\n"
+   "[level: 2] 3-->7-->nullptr\n"
+   "[level: 1] 1-->3-->5-->7-->9-->20-->nullptr\n")
+ * 
+*/
+
+//ostream to print it i guess
+ostream &operator<<(ostream &out, const SkipList &skip) {
+  for (int level = skip.levels -1 ; level >= 0; level--) {
+    out << "[level: " << level + 1 << "] ";
+
+    // Traverse the list at the current level
+    SNode *curr = skip.head->next[level];
+    while (curr != nullptr) {
+      out << curr->val << "-->";
+      curr = curr->next[level];
+  } 
+
+  // Print nullptr to indicate the end of the list
+  out << "nullptr\n";
+  }
+
+  return out;
+}
+
